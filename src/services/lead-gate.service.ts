@@ -3,6 +3,8 @@ import { Injectable, signal, inject } from '@angular/core';
 import { ContactService } from './contact.service';
 import { CampaignService } from './campaign.service';
 import { ConfigService } from './config.service';
+import { TrackingService } from './tracking.service';
+import { ConversionService, ConversionType } from './conversion.service';
 
 export interface PendingAction {
   url: string;
@@ -16,6 +18,8 @@ export class LeadGateService {
   private contactService = inject(ContactService);
   private campaignService = inject(CampaignService);
   private configService = inject(ConfigService);
+  private trackingService = inject(TrackingService);
+  private conversionService = inject(ConversionService);
 
   // Estado del Modal
   isOpen = signal(false);
@@ -135,17 +139,35 @@ Nombre: ${name}
       error: (err) => console.error('Lead save error', err)
     });
 
-    // 3. Ejecutar la redirección original
+    // 3. Ejecutar la redirección original o personalizada
     if (action) {
       setTimeout(() => {
-        // CORRECCIÓN: Usamos ConfigService para obtener el teléfono correcto
-        const phoneWa = this.configService.phoneWhatsapp() || '59896758200';
-        let targetUrl = `https://wa.me/${phoneWa}?text=${encodeURIComponent(formattedMessage)}`;
+        // Verificar si hay una URL de redirección personalizada
+        const redirectUrl = action.context?.redirectUrl;
         
-        // Si la URL original ya tenía parámetros especiales que queremos conservar (raro en este flujo), podríamos intentar parsearlos, 
-        // pero para el LeadGate es mejor forzar el mensaje estructurado nuevo.
-
-        window.open(targetUrl, '_blank');
+        if (redirectUrl) {
+          // Usar URL personalizada (tel: o https://wa.me/)
+          window.location.href = redirectUrl;
+        } else {
+          // Comportamiento por defecto: WhatsApp
+          const phoneWa = this.configService.phoneWhatsapp() || '59896758200';
+          const targetUrl = `https://wa.me/${phoneWa}?text=${encodeURIComponent(formattedMessage)}`;
+          window.open(targetUrl, '_blank');
+        }
+        
+        // Disparar conversión si está configurada
+        const conversionType = action.context?.conversionType;
+        if (conversionType) {
+          // Usar el nuevo sistema con tipos específicos
+          this.trackingService.trackConversion(conversionType, action.context?.action);
+        } else {
+          // Fallback a sistema legacy si no hay tipo específico
+          const conversionLabel = action.context?.conversionLabel;
+          if (conversionLabel) {
+            this.trackingService.trackConversionByLabel(conversionLabel, action.context?.action || 'lead_submit');
+          }
+        }
+        
         this.isOpen.set(false);
         this.pendingAction.set(null);
       }, 500);

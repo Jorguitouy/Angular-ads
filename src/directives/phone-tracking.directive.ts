@@ -1,24 +1,20 @@
-
 import { Directive, HostListener, Input, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { TrackingService } from '../services/tracking.service';
 import { LeadGateService } from '../services/lead-gate.service';
 import { TurnstileService } from '../services/turnstile.service';
 
 @Directive({
-  selector: 'a[appWhatsAppTracking]',
+  selector: 'a[appPhoneTracking]',
   standalone: true
 })
-export class WhatsAppTrackingDirective {
-  private trackingService = inject(TrackingService);
+export class PhoneTrackingDirective {
   private leadGateService = inject(LeadGateService);
   private turnstileService = inject(TurnstileService);
   private router = inject(Router);
 
-  @Input() trackingLabel: string = 'generic_whatsapp';
+  @Input() trackingLabel: string = 'phone_call';
   @Input() trackingContext: any = {};
   @Input() phoneNumber: string = '59896758200';
-  @Input() message?: string;
 
   private isVerifying = false;
   private scriptPreloaded = false;
@@ -34,7 +30,7 @@ export class WhatsAppTrackingDirective {
 
   @HostListener('click', ['$event'])
   async onClick(event: MouseEvent) {
-    // Prevenir navegación inmediata
+    // Prevenir acción inmediata
     event.preventDefault();
     
     if (this.isVerifying) {
@@ -51,33 +47,22 @@ export class WhatsAppTrackingDirective {
       target.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Verificando...';
       target.style.pointerEvents = 'none';
       
-      // Verificar Turnstile ANTES de abrir modal
+      // Verificar Turnstile
       const isValid = await this.turnstileService.verify();
       
       if (isValid) {
         // Verificación exitosa - abrir modal
-        const defaultMessage = 'Hola! Me gustaría solicitar más información sobre sus servicios de calefones.';
-        const finalMessage = this.message || defaultMessage;
-        const whatsappUrl = `https://wa.me/${this.phoneNumber}?text=${encodeURIComponent(finalMessage)}`;
+        const phoneUrl = `tel:${this.phoneNumber}`;
         
-        // Pasar contexto para que el modal sepa que debe redirigir a WhatsApp después del submit
+        // Pasar contexto para que el modal sepa que debe redirigir a llamada después del submit
         const context = {
           ...this.trackingContext,
-          action: 'whatsapp',
-          redirectUrl: whatsappUrl,
-          conversionType: 'whatsapp_hero', // Tipo específico de conversión
-          message: finalMessage
+          action: 'phone_call',
+          redirectUrl: phoneUrl,
+          conversionType: 'phone_call_hero' // Tipo específico de conversión
         };
         
-        // Tracking forense (se ejecuta siempre)
-        this.trackingService.trackLeadIntent({
-          label: this.trackingLabel,
-          context: context,
-          url: whatsappUrl
-        });
-        
-        // Activar el Gatekeeper (Modal)
-        this.leadGateService.triggerGate(whatsappUrl, context);
+        this.leadGateService.triggerGate(phoneUrl, context);
       } else {
         // Verificación fallida
         target.innerHTML = '<i class="bi bi-shield-x me-2"></i>Verificación fallida';
@@ -87,7 +72,7 @@ export class WhatsAppTrackingDirective {
         }, 2000);
       }
     } catch (error) {
-      console.error('Error en verificación de WhatsApp:', error);
+      console.error('Error en verificación de teléfono:', error);
       target.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Error';
       setTimeout(() => {
         target.innerHTML = originalContent;

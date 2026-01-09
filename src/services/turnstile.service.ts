@@ -25,10 +25,37 @@ export class TurnstileService {
 
   private scriptCargado = false;
   private cargando = false;
+  private preloadPromise: Promise<void> | null = null;
 
   // Signals para el UI
   verificando = signal(false);
   error = signal<string | null>(null);
+
+  /**
+   * Pre-carga el script Turnstile en background (sin mostrar widget)
+   * Se llama en mouseenter de botones para mejorar UX
+   */
+  preload(): Promise<void> {
+    // Si ya está cargado o cargando, retornar la promesa existente
+    if (this.scriptCargado) {
+      return Promise.resolve();
+    }
+    
+    if (this.cargando && this.preloadPromise) {
+      return this.preloadPromise;
+    }
+
+    this.preloadPromise = this.cargarScript();
+    return this.preloadPromise;
+  }
+
+  /**
+   * Verificación simplificada (para compatibilidad con directivas)
+   */
+  async verify(): Promise<boolean> {
+    const token = await this.verificar();
+    return token !== null;
+  }
 
   /**
    * Método principal de verificación.
@@ -51,8 +78,12 @@ export class TurnstileService {
     }
 
     try {
-      // PASO 1: Cargar script
-      await this.cargarScript();
+      // PASO 1: Usar preload si está disponible, sino cargar script
+      if (this.preloadPromise) {
+        await this.preloadPromise;
+      } else {
+        await this.cargarScript();
+      }
 
       // PASO 2: Ejecutar verificación invisible
       const token = await this.ejecutarVerificacionInvisible();

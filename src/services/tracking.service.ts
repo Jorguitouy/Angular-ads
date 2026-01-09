@@ -1,7 +1,16 @@
-
 import { Injectable, inject, Renderer2, RendererFactory2 } from '@angular/core';
 import { FingerprintService } from '../components/fingerprint.service';
 import { LocationService } from './location.service';
+import { ConversionService, ConversionType } from './conversion.service';
+
+// Declaración global para gtag (Google Analytics)
+declare global {
+  interface Window {
+    gtag: (command: string, targetId: string, config?: any) => void;
+  }
+}
+
+declare var gtag: (command: string, targetId: string, config?: any) => void;
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +19,7 @@ export class TrackingService {
   private renderer: Renderer2;
   private fingerprintService = inject(FingerprintService);
   private locationService = inject(LocationService);
+  private conversionService = inject(ConversionService);
   
   private startTime: number;
   
@@ -111,5 +121,38 @@ export class TrackingService {
     const type = id.includes('call') ? 'call' : 'other';
     // Reutilizamos trackLeadIntent pero con tipo genérico
     this.trackLeadIntent({ label: id, context: { type } }); 
+  }
+
+  /**
+   * Dispara código de conversión de Google Ads
+   * Solo se ejecuta después de verificación exitosa
+   */
+  trackConversion(conversionType: ConversionType, action: string = 'conversion', customValue?: number) {
+    // Verificar que gtag esté disponible
+    if (typeof window !== 'undefined' && window.gtag) {
+      // Obtener configuración de conversión desde ConversionService
+      const config = this.conversionService.buildConversionConfig(conversionType, customValue);
+      
+      window.gtag('event', 'conversion', config);
+    } else {
+      console.warn('⚠️ Google Analytics (gtag) no disponible para conversión');
+    }
+  }
+
+  /**
+   * Método legacy para compatibilidad (recibe string directo)
+   */
+  trackConversionByLabel(conversionLabel: string, action: string = 'conversion') {
+    // Verificar que gtag esté disponible
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'conversion', {
+        'send_to': conversionLabel,
+        'event_callback': () => {
+          console.log(`✅ Conversión registrada: ${conversionLabel}`);
+        }
+      });
+    } else {
+      console.warn('⚠️ Google Analytics (gtag) no disponible para conversión');
+    }
   }
 }

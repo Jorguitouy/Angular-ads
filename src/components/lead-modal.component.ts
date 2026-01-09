@@ -310,7 +310,7 @@ type UserIntent = "quote" | "visit";
                 intent() === 'quote' ? '#25D366' : '#ff6b00'
               "
               [style.color]="'white'"
-              (mouseenter)="turnstileService.precargar()"
+              (mouseenter)="turnstileService.preload()"
             >
               @if (turnstileService.verificando()) {
               <svg class="animate-spin h-6 w-6 text-white" viewBox="0 0 24 24">
