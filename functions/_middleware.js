@@ -28,11 +28,8 @@ function getAllowedOrigins(env) {
     } catch(e) {}
   }
   
-  // Fallback: dominio por defecto si no hay variable
-  if (!env?.SITE_URL) {
-    origins.push('https://arreglo.servicedecalefones.uy');
-    origins.push('https://www.arreglo.servicedecalefones.uy');
-  }
+  // Fallback: sin dominio por defecto - requiere SITE_URL configurado
+  // No hardcodear dominios para evitar exposición en código fuente
   
   return origins;
 }
