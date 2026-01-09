@@ -62,7 +62,8 @@ export class LeadGateService {
       phone: string, 
       countryCode: string, 
       intent: 'quote' | 'visit' = 'quote', 
-      timePreference?: string
+      timePreference?: string,
+      turnstileToken?: string
   ) {
     // 1. Guardar en LocalStorage
     if (typeof localStorage !== 'undefined') {
@@ -127,7 +128,7 @@ Nombre: ${name}
       phone: fullPhone,
       email: 'lead_gatekeeper@whatsapp.click',
       message: formattedMessage,
-      turnstileToken: 'SKIP_INTERNAL',
+      turnstileToken: turnstileToken || 'SKIP_INTERNAL',
       deviceFingerprint: `GATEKEEPER_${intent.toUpperCase()}`
     }).subscribe({
       next: () => console.log('Lead secured'),

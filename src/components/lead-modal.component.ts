@@ -11,6 +11,7 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { LeadGateService } from "../services/lead-gate.service";
 import { ConfigService } from "../services/config.service";
+import { TurnstileService } from "../services/turnstile.service";
 import { NgClass } from "@angular/common";
 
 interface Country {
@@ -300,17 +301,18 @@ type UserIntent = "quote" | "visit";
             </div>
             }
 
-            <!-- Submit Button -->
+            <!-- Submit Button con Turnstile -->
             <button
               type="submit"
-              [disabled]="form.invalid || isSubmitting()"
+              [disabled]="form.invalid || isSubmitting() || turnstileService.verificando()"
               class="w-full font-black text-xl py-5 rounded-2xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
               [style.background-color]="
                 intent() === 'quote' ? '#25D366' : '#ff6b00'
               "
               [style.color]="'white'"
+              (mouseenter)="turnstileService.precargar()"
             >
-              @if (isSubmitting()) {
+              @if (turnstileService.verificando()) {
               <svg class="animate-spin h-6 w-6 text-white" viewBox="0 0 24 24">
                 <circle
                   class="opacity-25"
@@ -326,6 +328,24 @@ type UserIntent = "quote" | "visit";
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
+              <span>Verificando...</span>
+              } @else if (isSubmitting()) {
+              <svg class="animate-spin h-6 w-6 text-white" viewBox="0 0 24 24">
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span>Enviando...</span>
               } @else { @if (intent() === 'visit') {
               <span>Solicitar Visita Ahora</span>
               } @else {
@@ -345,6 +365,13 @@ type UserIntent = "quote" | "visit";
               </svg>
               }
             </button>
+
+            <!-- Error de Turnstile -->
+            @if (turnstileService.error()) {
+            <p class="text-center text-red-600 text-sm mt-3 font-medium">
+              {{ turnstileService.error() }}
+            </p>
+            }
           </form>
         </div>
 
@@ -505,6 +532,7 @@ export class LeadModalComponent {
   leadService = inject(LeadGateService);
   configService = inject(ConfigService);
   fb = inject(FormBuilder);
+  turnstileService = inject(TurnstileService);
 
   @ViewChild("searchInput") searchInput!: ElementRef;
 
@@ -625,19 +653,30 @@ export class LeadModalComponent {
     }
   }
 
-  onSubmit() {
-    if (this.form.valid) {
-      this.isSubmitting.set(true);
-      const { name, phone, timePreference } = this.form.value;
-      const countryDial = this.countryData().code;
+  async onSubmit(): Promise<void> {
+    if (this.form.invalid) return;
 
-      this.leadService.submitLead(
-        name!,
-        phone!,
-        countryDial,
-        this.intent(),
-        this.intent() === "visit" ? timePreference! : undefined
-      );
+    // VERIFICACIÓN TURNSTILE
+    const token = await this.turnstileService.verificar();
+    
+    if (!token) {
+      // Verificación fallida - posible bot o bloqueado
+      console.warn('Verificación Turnstile fallida');
+      return;
     }
+
+    // Verificación exitosa - procesar lead
+    this.isSubmitting.set(true);
+    const { name, phone, timePreference } = this.form.value;
+    const countryDial = this.countryData().code;
+
+    this.leadService.submitLead(
+      name!,
+      phone!,
+      countryDial,
+      this.intent(),
+      this.intent() === "visit" ? timePreference! : undefined,
+      token // Pasar token de Turnstile
+    );
   }
 }
