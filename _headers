@@ -1,0 +1,44 @@
+# Cloudflare Pages Headers Configuration
+# Este archivo configura los headers HTTP para todas las respuestas
+
+/*
+  # Content Security Policy - Permite Google Ads, Analytics, GTM, Cloudflare, Facebook, Angular
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://esm.sh https://www.googletagmanager.com https://tagmanager.google.com https://www.google-analytics.com https://ssl.google-analytics.com https://connect.facebook.net https://*.google.com https://*.gstatic.com https://*.googleadservices.com https://*.doubleclick.net https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.googletagservices.com https://adservice.google.com https://adservice.google.com.uy; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com https://tagmanager.google.com; img-src 'self' data: blob: https://picsum.photos https://fastly.picsum.photos https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com https://*.google.com https://*.google.com.uy https://*.facebook.com https://*.googleadservices.com https://*.doubleclick.net https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com.uy; connect-src 'self' https://challenges.cloudflare.com https://cloudflareinsights.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.google.com https://*.doubleclick.net https://stats.g.doubleclick.net https://*.facebook.com https://region1.google-analytics.com https://pagead2.googlesyndication.com https://adservice.google.com https://adservice.google.com.uy https://www.googleadservices.com; frame-src https://challenges.cloudflare.com https://*.google.com https://*.doubleclick.net https://td.doubleclick.net https://www.googletagmanager.com https://bid.g.doubleclick.net https://tpc.googlesyndication.com; font-src 'self' https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self' https://www.google.com https://www.google.com.uy;
+  # HSTS - Fuerza HTTPS por 1 año
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  # Previene MIME sniffing
+  X-Content-Type-Options: nosniff
+  # Política de referrer
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Deshabilita features no usadas
+  Permissions-Policy: accelerometer=(), camera=(), microphone=(), geolocation=(self), payment=(), usb=()
+  # Previene clickjacking
+  X-Frame-Options: SAMEORIGIN
+
+# Cache headers para assets estáticos
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpeg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.ico
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,0 +1,20 @@
+# El nombre de tu aplicaci├│n en Cloudflare.
+name = "antygravity"
+pages_build_output_dir = "dist"
+
+# Fecha de compatibilidad para Wrangler. Asegura que las actualizaciones no rompan tu proyecto.
+compatibility_date = "2024-01-01"
+
+# Vinculaci├│n a la base de datos D1. Esto conecta tu c├│digo a la base de datos.
+[[d1_databases]]
+# El nombre de la variable en tu c├│digo (ej: env.DB)
+binding = "DB"
+# El nombre de la base de datos en el panel de Cloudflare.
+database_name = "contact-db"
+# El ID ├║nico de la base de datos.
+database_id = "265075d9-7509-4db1-9950-aa75a750f405"
+
+# Vinculación KV para Geo y Rate Limit
+# [[kv_namespaces]]
+# binding = "GEO_KV"
+# id = "PENDIENTE_DE_CONFIGURACION_MANUAL"

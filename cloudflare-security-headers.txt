@@ -1,0 +1,26 @@
+
+# 🛡️ HEADERS DE SEGURIDAD RECOMENDADOS (Copiar a Cloudflare Transform Rules o _headers)
+
+# 1. Content-Security-Policy (CSP)
+# Define estrictamente qué recursos pueden cargar el navegador.
+# - script-src: Permite scripts propios, de Cloudflare (Turnstile) y ESM (Módulos). 'unsafe-inline' es necesario para la inyección de variables del Worker.
+# - connect-src: Permite conexiones a la API interna, Turnstile y Data Layer.
+# - img-src: Permite imágenes de Picsum, Data URIs (SVGs) y propias.
+
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://challenges.cloudflare.com https://esm.sh; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data: https://picsum.photos https://fastly.picsum.photos; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self';
+
+# 2. Strict-Transport-Security (HSTS)
+# Fuerza HTTPS durante 1 año, incluye subdominios y precarga.
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+# 3. X-Content-Type-Options
+# Evita que el navegador "adivine" el tipo de archivo (MIME Sniffing).
+X-Content-Type-Options: nosniff
+
+# 4. Referrer-Policy
+# Solo envía el origen (dominio) en enlaces salientes, protegiendo rutas privadas internas.
+Referrer-Policy: strict-origin-when-cross-origin
+
+# 5. Permissions-Policy
+# Deshabilita características del navegador no utilizadas (Micrófono, Cámara) para reducir superficie de ataque.
+Permissions-Policy: accelerometer=(), camera=(), microphone=(), geolocation=(self), payment=(), usb=()
